@@ -1,0 +1,76 @@
+%%
+ncfile = 'o3_surface_20180701000000.nc';
+
+ncinfo(ncfile) %- gives info on nc file
+ncdisp(ncfile) % displays nc file
+
+%%select an ozone map 
+disp('1: emep ozone map')
+disp('2: chimere ozone map')
+disp('3: ozone map')
+disp('4: lotoseuros ozone map')
+disp('5: eurad ozone map')
+disp('6: ensemble ozone map')
+disp('7: silam ozone map')
+disp('8: mocage ozone map')
+selected_map = input('Select ozone map')
+if selected_map == 1
+    select = 'emep_ozone'
+elseif selected_map == 2
+    select = 'chimere_ozone'
+elseif selected_map == 3
+    select = 'match_ozone'
+elseif selected_map == 4
+    select = 'lotoseuros_ozone'
+elseif selected_map == 5
+    select = 'eurad_ozone'
+elseif selected_map == 6
+    select = 'ensemble_ozone'
+elseif selected_map == 7
+    select = 'silam_ozone'
+elseif selected_map == 8
+    select = 'mocage_ozone'
+end
+X = ncread(ncfile, 'lat');
+Y = ncread(ncfile, 'lon');
+time = ncread(ncfile, 'hour'); 
+selection = ncread(ncfile, select);
+chimere_ozone = ncread(ncfile, "chimere_ozone");
+
+%colour blindness selection
+disp('Do you require colourblind assistance?')
+cBlind = input('input 1 for yes or 2 for no ')
+if cBlind == 1
+    colormap bone;
+elseif cBlind == 2
+    colormap default;
+end
+
+%% main loop
+for i = 1:length(time) %iterates through 1 hour intervals
+    Z = chimere_ozone(:,:,i);
+    % Create the map
+    worldmap('Europe'); % set the part of the earth to show
+    
+    load coastlines %plots coastlines on the map
+    plotm(coastlat,coastlon)
+
+    land = shaperead('landareas', 'UseGeoCoords', true);
+    geoshow(gca, land, 'FaceColor', [0.5 0.7 0.5])
+
+    lakes = shaperead('worldlakes', 'UseGeoCoords', true);
+    geoshow(lakes, 'FaceColor', 'blue')
+
+    rivers = shaperead('worldrivers', 'UseGeoCoords', true);
+    geoshow(rivers, 'Color', 'blue')
+
+    cities = shaperead('worldcities', 'UseGeoCoords', true);
+    geoshow(cities, 'Marker', '.', 'Color', 'red')
+
+    % Plot the data
+    surfm(double(X), double(Y), double(Z), 'EdgeColor', 'none',...
+        'FaceAlpha', 0.5) % edge colour outlines the edges, 'FaceAlpha', sets the transparency
+    title(sprintf('Current time:  %.0f', time(i)));
+    pause(0.05)
+    
+end
